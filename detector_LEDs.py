@@ -7,6 +7,7 @@ import os
 
 def pathVerification():
     global FolderName
+    global Folderpath
     global path
 
     FolderName = "C:/Python/LED_Test/"
@@ -14,28 +15,29 @@ def pathVerification():
     Folderpath = FolderName + path
 
     if not os.path.exists(FolderName):
-        print(f"Creating folder: {FolderName}")
         os.makedirs(FolderName)
 
     if not os.path.exists(Folderpath):
-        print(f"Creating folder: {Folderpath}")
         os.makedirs(Folderpath)
 
 def takeFrame():
     MessageBox = ctypes.windll.user32.MessageBoxW
     MessageBox(None, "Presione 'OK' para iniciar la prueba", 'LED Test', 0)
 
+    capture_duration = 1
+
     Camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
-    while Camera.isOpened():
+    start_time = time()
+    while ( int(time() - start_time) < capture_duration ):
         ret, frame = Camera.read()
         if ret is not True: break
         
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
         k = cv2.waitKey(1)
-        if k == 27: break
-
+        if k == 27: break   
+        
         cv2.imshow('Video', gray)
         cv2.imwrite(Folderpath + '/frame.bmp', gray)
 
@@ -48,10 +50,9 @@ def drawCnt(contorno, color):
         cv2.drawContours(imagen, [c], 0, color, 1)
 
 def Inspection():
-    Backup = "C:/Python/LED_Test/" + path +"Backup/"
+    Backup = "C:/Python/LED_Test/" + path +"/Backup/"
     
     if not os.path.exists(Backup):
-        print(f"Creating folder: {Backup}")
         os.makedirs(Backup)
 
     global imagen
@@ -66,19 +67,24 @@ def Inspection():
 
     cnt,_ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
-    drawCnt(cnt, (0,255,0))
-    
-    
+    l = []
 
-    totalLEDs = len(cnt)
-    print(totalLEDs)
+    for i in range(3):
+        drawCnt(cnt, (0,255,0))
+        totalLEDs = len(cnt)
+        l.append(totalLEDs)
+
+    res = ((l[0] + l[1] + l[2])/ 3)
+
+    print(res)
 
     cv2.imshow('imagen', imagen)
     cv2.imshow('mask', mask)
     cv2.imwrite(Backup + '/LED_Contour.bmp', imagen)
     cv2.imwrite(Backup + '/mask.bmp', mask)
 
-    cv2.waitKey(0)
+    cv2.waitKey(100)
+
     cv2.destroyAllWindows()
 
 
